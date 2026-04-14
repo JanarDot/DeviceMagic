@@ -689,27 +689,29 @@
       box-shadow: 0 4px 32px rgba(196, 151, 63, 0.32), 0 0 0 1px rgba(196, 151, 63, 0.18);
     }
 
-    /* ── Ghost secondary button ─────────────────────────────────────────── */
-    .btn-secondary {
-      margin-top: 14px;
-      padding: 13px 36px;
-      background: transparent;
-      border: 1px solid rgba(196, 151, 63, 0.22);
-      color: var(--gold-dim);
-      font-size: 0.68rem;
-      letter-spacing: 0.18em;
-      box-shadow: none;
+    /* ── Plain text link button (Android "try in browser") ─────────────── */
+    .btn-text-link {
+      margin-top: 18px;
+      background: none;
+      border: none;
+      padding: 4px 0;
+      font-family: var(--font-ui);
+      font-size: 0.6rem;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.2s;
+      animation: fadeIn 0.9s ease both;
       animation-delay: 0.96s;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .btn-secondary::after { display: none; }
-
-    .btn-secondary:hover,
-    .btn-secondary:active {
-      background: rgba(196, 151, 63, 0.06);
-      border-color: rgba(196, 151, 63, 0.42);
-      color: var(--gold);
-      box-shadow: none;
+    .btn-text-link:hover,
+    .btn-text-link:active {
+      color: var(--gold-dim);
     }
 
     /* ── Platform note ──────────────────────────────────────────────────── */
@@ -791,23 +793,34 @@
 
     #landing footer {
       align-items: stretch;
-      padding: 24px 24px max(24px, env(safe-area-inset-bottom));
+      padding: 20px 24px max(24px, env(safe-area-inset-bottom));
+      gap: 14px;
     }
 
-    .footer-row {
+    /* Credits row — love text right, copyright left, matching Android app */
+    .footer-credits {
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       justify-content: space-between;
-      gap: 20px;
       width: 100%;
       max-width: 540px;
+      gap: 12px;
     }
 
-    .footer-right {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 8px;
+    .footer-love {
+      font-size: 0.6rem !important;
+      line-height: 1.5 !important;
+      max-width: none !important;
+      text-align: right;
+    }
+
+    .footer-copy {
+      font-size: 0.6rem;
+      white-space: nowrap;
+    }
+
+    .footer-bottom {
+      gap: 10px;
     }
 
     /* ── FAQ accordion ──────────────────────────────────────────────────── */
@@ -906,15 +919,13 @@
       }
     }
 
-    @media (max-width: 380px) {
-      .footer-row {
+    @media (max-width: 360px) {
+      .footer-credits {
         flex-direction: column;
         align-items: flex-start;
-        gap: 16px;
+        gap: 6px;
       }
-      .footer-right {
-        align-items: flex-start;
-      }
+      .footer-love { text-align: left; }
     }
   </style>
 </head>
@@ -958,14 +969,7 @@
         Download for Android
       </a>
 
-      <a class="btn-download btn-secondary" href="#" id="android-browser-btn">
-        Try in browser instead
-      </a>
-
-      <p class="platform-note">
-        Direct install · no app store required<br>
-        Runs in the background with screen off
-      </p>
+      <button class="btn-text-link" id="android-browser-btn">try in browser</button>
 
     </div>
 
@@ -1018,42 +1022,40 @@
     </div>
 
     <footer>
-      <div class="footer-row">
 
-        <!-- ── FAQ — bottom left ─────────────────────────────────────── -->
-        <details class="faq">
-          <summary>
-            FAQ
-            <svg class="faq-chevron" viewBox="0 0 10 6">
-              <polyline points="1,1 5,5 9,1"/>
-            </svg>
-          </summary>
-          <div class="faq-body">
-            <p class="faq-q">What is Device Magic?</p>
-            <p class="faq-a">Placeholder — what the app does in one sentence.</p>
-            <div class="faq-divider"></div>
-            <p class="faq-q">Does it drain my battery?</p>
-            <p class="faq-a">Placeholder — short answer about battery usage.</p>
-            <div class="faq-divider"></div>
-            <p class="faq-q">Is it free?</p>
-            <p class="faq-a">Placeholder — pricing / open-source note.</p>
-          </div>
-        </details>
-
-        <!-- ── Right side ────────────────────────────────────────────── -->
-        <div class="footer-right">
-          <p class="footer-love">made with &lt;3 and open sourced<br>4 everyone to have more magic in their life!!</p>
-          <div class="footer-bottom">
-            <span class="footer-copy">© Clandestina Labs 2026</span>
-            <a class="footer-x" href="https://x.com/Clandestinalabs" target="_blank" rel="noopener" aria-label="Clandestina Labs on X">
-              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.91-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-              </svg>
-            </a>
-          </div>
+      <!-- ── FAQ — above credits ──────────────────────────────────────── -->
+      <details class="faq">
+        <summary>
+          FAQ
+          <svg class="faq-chevron" viewBox="0 0 10 6">
+            <polyline points="1,1 5,5 9,1"/>
+          </svg>
+        </summary>
+        <div class="faq-body">
+          <p class="faq-q">What is Device Magic?</p>
+          <p class="faq-a">Placeholder — what the app does in one sentence.</p>
+          <div class="faq-divider"></div>
+          <p class="faq-q">Does it drain my battery?</p>
+          <p class="faq-a">Placeholder — short answer about battery usage.</p>
+          <div class="faq-divider"></div>
+          <p class="faq-q">Is it free?</p>
+          <p class="faq-a">Placeholder — pricing / open-source note.</p>
         </div>
+      </details>
 
+      <!-- ── Credits — © left, love text right ────────────────────────── -->
+      <div class="footer-credits">
+        <div class="footer-bottom">
+          <span class="footer-copy">© Clandestina Labs 2026</span>
+          <a class="footer-x" href="https://x.com/Clandestinalabs" target="_blank" rel="noopener" aria-label="Clandestina Labs on X">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.91-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+        </div>
+        <p class="footer-love">made with &lt;3 and open sourced<br>4 everyone to have more magic in their life!!</p>
       </div>
+
     </footer>
   </section>
 
@@ -1142,16 +1144,16 @@
       window.removeEventListener('scroll', hideHint);
     }, { passive: true });
 
-    // Android "Try in browser" — routes to the same flow as the iOS activate button
+    // Android "try in browser" — triggers the full activation flow
+    // app.js listens on #activate-btn; we dispatch a real click event so it fires
+    // even though the button is inside the hidden iOS view (display:none doesn't
+    // block programmatic events, but dispatchEvent is more reliable cross-browser)
     var androidBrowserBtn = document.getElementById('android-browser-btn');
     if (androidBrowserBtn) {
-      androidBrowserBtn.addEventListener('click', function (e) {
-        e.preventDefault();
+      androidBrowserBtn.addEventListener('click', function () {
         var activateBtn = document.getElementById('activate-btn');
-        // Make iOS view briefly visible so app.js can attach to #activate-btn,
-        // then programmatically trigger it
         if (activateBtn) {
-          activateBtn.click();
+          activateBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
         }
       });
     }
