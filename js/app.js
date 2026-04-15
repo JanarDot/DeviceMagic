@@ -124,12 +124,26 @@ async function handleActivate() {
     wakeLock = await navigator.wakeLock.request('screen');
   } catch (_) {}
 
-  // Step 7: Transition to casting UI
+  // Step 7: Transition to casting UI.
+  // Instead of hiding landing, we add the casting-active class to body:
+  //   - Platform views (buttons, downloads) are hidden via CSS
+  //   - Compact brand (title + tagline) is shown in landing
+  //   - Scroll indicator appears at the bottom of landing
+  //   - Landing footer/credits are hidden (casting footer has them)
+  //   - #casting[hidden] is revealed and scrolled into view
   if (feedbackBtn) feedbackBtn.textContent = 'Your phone is a wand now ✦';
   await new Promise(r => setTimeout(r, 900));
-  _el('landing').hidden = true;
-  _el('casting').hidden = false;
+
+  document.body.classList.add('casting-active');
+  const castingEl = _el('casting');
+  castingEl.removeAttribute('hidden');
+
   _updateStatusUI();
+
+  // Scroll casting into view so the user immediately sees the active state
+  setTimeout(() => {
+    castingEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 150);
 }
 
 // ── Gesture detected ─────────────────────────────────────────────────────────

@@ -114,6 +114,10 @@
       flex-direction: column;
     }
 
+    /* Fix: CSS display:flex overrides the [hidden] attribute's display:none
+       because ID selectors beat the UA stylesheet. This restores correct behavior. */
+    #casting[hidden] { display: none !important; }
+
     /* ═══════════════════════════════════════════════════════════════════════
        LANDING STATE
     ═══════════════════════════════════════════════════════════════════════ */
@@ -519,6 +523,60 @@
       color: var(--text-muted);
       letter-spacing: 0.07em;
       padding: 6px 20px 0;
+    }
+
+    /* ── Casting-active landing state ───────────────────────────────────── */
+    /* When casting is activated, hide platform views + footer from landing.
+       Show the compact brand + scroll indicator instead. */
+    body.casting-active .view-ios,
+    body.casting-active .view-android,
+    body.casting-active .view-mac,
+    body.casting-active .view-desktop {
+      display: none !important;
+    }
+    body.casting-active #landing footer {
+      display: none;
+    }
+
+    /* Compact brand — hidden until casting activates */
+    .casting-brand {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+      justify-content: center;
+    }
+    body.casting-active .casting-brand {
+      display: flex;
+    }
+
+    /* Scroll-to-casting indicator — hidden until casting activates */
+    .scroll-to-casting {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding-bottom: max(28px, env(safe-area-inset-bottom));
+      color: var(--text-muted);
+      opacity: 0.55;
+      animation: bounceCast 2s ease-in-out infinite;
+    }
+    body.casting-active .scroll-to-casting {
+      display: flex;
+    }
+    .scroll-to-casting-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .scroll-to-casting svg {
+      width: 22px;
+      height: 13px;
+    }
+    @keyframes bounceCast {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(6px); }
     }
 
     /* ── Spell flash overlay ─────────────────────────────────────────────── */
@@ -1104,6 +1162,22 @@
 
       <p class="qr-label">janardot.github.io/DeviceMagic</p>
 
+    </div>
+
+    <!-- ── Compact brand — replaces platform views once casting activates ── -->
+    <div class="casting-brand">
+      <p class="ornament">✦ &nbsp; ✦ &nbsp; ✦</p>
+      <h1 class="landing-headline">Device<br>Magic</h1>
+      <div class="gold-rule"></div>
+      <p class="landing-tagline">Flick your wrist.<br>Cast a spell.</p>
+    </div>
+
+    <!-- ── Scroll indicator — points to casting section below ────────────── -->
+    <div class="scroll-to-casting">
+      <span class="scroll-to-casting-label">your wand awaits</span>
+      <svg viewBox="0 0 24 14" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="2,2 12,12 22,2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </div>
 
     <footer>
