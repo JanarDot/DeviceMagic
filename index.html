@@ -521,6 +521,88 @@
       padding: 6px 20px 0;
     }
 
+    /* ── Spell flash overlay ─────────────────────────────────────────────── */
+    #spell-flash {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 248, 220, 0.88);
+      pointer-events: none;
+      opacity: 0;
+      z-index: 9999;
+    }
+    #spell-flash.flash-active {
+      animation: spellFlash 0.55s ease-out forwards;
+    }
+    @keyframes spellFlash {
+      0%   { opacity: 0.9; }
+      100% { opacity: 0; }
+    }
+
+    /* ── Last spell name ─────────────────────────────────────────────────── */
+    .last-spell-wrap {
+      min-height: 36px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .last-spell-name {
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--gold-bright);
+      letter-spacing: 0.04em;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: none;
+    }
+    .last-spell-name.spell-name-pop {
+      animation: spellNameIn 2.4s ease forwards;
+    }
+    @keyframes spellNameIn {
+      0%   { opacity: 0; transform: translateY(6px); }
+      12%  { opacity: 1; transform: translateY(0); }
+      70%  { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-4px); }
+    }
+
+    /* ── Sensor dot ──────────────────────────────────────────────────────── */
+    .sensor-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 4px 0 2px;
+    }
+    .sensor-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold-dim);
+      opacity: 0.35;
+      transition: opacity 0.1s, background 0.1s;
+    }
+    .sensor-dot.sensor-pulse {
+      background: var(--gold-bright);
+      opacity: 1;
+    }
+    .sensor-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+
+    /* ── No-motion fallback message ──────────────────────────────────────── */
+    .no-motion-msg {
+      font-size: 0.72rem;
+      color: var(--gold-dim);
+      text-align: center;
+      padding: 4px 24px;
+      opacity: 0.8;
+    }
+
     /* ═══════════════════════════════════════════════════════════════════════
        FOOTER
     ═══════════════════════════════════════════════════════════════════════ */
@@ -1035,14 +1117,14 @@
           </svg>
         </summary>
         <div class="faq-body">
-          <p class="faq-q">What is Device Magic?</p>
-          <p class="faq-a">Placeholder — what the app does in one sentence.</p>
+          <p class="faq-q">Y?</p>
+          <p class="faq-a">Why not?</p>
           <div class="faq-divider"></div>
-          <p class="faq-q">Does it drain my battery?</p>
-          <p class="faq-a">Placeholder — short answer about battery usage.</p>
+          <p class="faq-q">Dan, Rupert, Tom and all the other witches and wizards</p>
+          <p class="faq-a">let's make the spells even better - contact me!</p>
           <div class="faq-divider"></div>
-          <p class="faq-q">Is it free?</p>
-          <p class="faq-a">Placeholder — pricing / open-source note.</p>
+          <p class="faq-q">@ Warner Bros &amp; Disney</p>
+          <p class="faq-a">Please don't sue me. We all deserve more MAGIC in our lives! This is not for commercial use, it's just meant to spread some fun.</p>
         </div>
       </details>
 
@@ -1063,20 +1145,38 @@
   </section>
 
 
+  <!-- Full-screen flash overlay — triggered by app.js on each spell cast -->
+  <div id="spell-flash" aria-hidden="true"></div>
+
   <!-- ─────────────────────────────────────────────────────────────────────
        CASTING UI
   ───────────────────────────────────────────────────────────────────────── -->
   <section id="casting" hidden>
 
-    <!-- Hidden elements updated by app.js — not displayed -->
+    <!-- Hidden status elements (used by app.js internally) -->
     <span id="status-emoji" style="display:none"></span>
     <span id="status-text"  style="display:none"></span>
-    <span id="last-spell"   style="display:none"></span>
 
-    <!-- Spell counter — small badge, animates on each cast -->
+    <!-- Last spell name — visible, animates on each cast -->
+    <div class="last-spell-wrap">
+      <span id="last-spell" class="last-spell-name"></span>
+    </div>
+
+    <!-- Spell counter -->
     <div class="counter-wrap">
       <span id="spell-count" class="spell-counter"></span>
     </div>
+
+    <!-- Sensor indicator — pulses on every raw motion event -->
+    <div class="sensor-indicator">
+      <span id="sensor-dot" class="sensor-dot"></span>
+      <span class="sensor-label">sensor active</span>
+    </div>
+
+    <!-- Shown if DeviceMotionEvent is not supported -->
+    <p id="no-motion-msg" class="no-motion-msg" hidden>
+      Motion not supported in this browser — use the test button below.
+    </p>
 
     <!-- Scroll hint -->
     <div class="scroll-hint" id="scroll-hint">

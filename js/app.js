@@ -3,21 +3,23 @@
 // Wires together: MotionEngine (motion.js) + AudioEngine (audio.js) + selectSpell (spells.js)
 // Manages all state, persists it to localStorage, and drives the UI.
 //
-// DOM elements this file expects (provided by Phase 6 — index.html):
+// DOM elements this file expects:
 //   #landing          — the landing section, visible before activation
 //   #casting          — the casting section, hidden before activation
-//   #activate-btn     — the single button the user taps to start
+//   #activate-btn     — the single button iOS users tap to start
+//   #android-browser-btn — "try in browser" button on Android view
 //   #status-emoji     — shows 🪄 (active) or 💤 (paused)
 //   #status-text      — shows "Listening for spells" or "Monitoring off"
 //   #last-spell       — displays the name of the last spell cast
-//   #spell-count      — displays "X spells cast"
+//   #spell-count      — displays spell counter
 //   #active-toggle    — checkbox to toggle monitoring on/off
 //   #voice-picker     — <select> for Female / Male / Mixed
 //   #volume-slider    — <input type="range"> for volume
 //   #test-btn         — fires a spell without a gesture
+//   #spell-flash      — full-screen flash overlay (added to index.html)
+//   #no-motion-msg    — shown when DeviceMotionEvent is unsupported
 
 // ── State ────────────────────────────────────────────────────────────────────
-// Mirrors the @Published properties and UserDefaults keys in AppModel.swift
 
 const state = {
   isActive:           _load('isActive',           true),
@@ -39,86 +41,99 @@ function _save() {
 
 // ── Engine instances ─────────────────────────────────────────────────────────
 
-const motion = new MotionEngine(onGestureDetected);
+const motion = new MotionEngine(onGestureDetected, onRawMotion);
 const audio  = new AudioEngine();
-let wakeLock = null;
+let wakeLock  = null;
 
 // ── Boot ─────────────────────────────────────────────────────────────────────
-// Runs once when the page finishes loading.
 
 window.addEventListener('DOMContentLoaded', () => {
   // Restore UI controls to saved state
-  _el('voice-picker').value   = state.voiceStyle;
-  _el('volume-slider').value  = state.volume;
+  _el('voice-picker').value    = state.voiceStyle;
+  _el('volume-slider').value   = state.volume;
   _el('active-toggle').checked = state.isActive;
   _updateSpellCounter();
 
-  // Wire up all control event listeners
-  _el('activate-btn').addEventListener('click',    handleActivate);
-  _el('active-toggle').addEventListener('change',  handleToggle);
-  _el('voice-picker').addEventListener('change',   handleVoiceChange);
-  _el('volume-slider').addEventListener('input',   handleVolumeChange);
-  _el('test-btn').addEventListener('click',        onGestureDetected);
+  // iOS activate button
+  _el('activate-btn').addEventListener('click',   handleActivate);
 
-  // Android "try in browser" — must be wired here so the click is a real trusted
-  // user gesture. dispatchEvent() creates isTrusted=false events which Android Chrome
-  // blocks for audio.play(), so the old inline-script workaround silently broke audio.
+  // Android "try in browser" — wired here so the click is a real trusted user gesture.
+  // dispatchEvent() creates isTrusted=false events which Android Chrome blocks for audio.play().
   const androidBtn = document.getElementById('android-browser-btn');
   if (androidBtn) {
     androidBtn.addEventListener('click', handleActivate);
   }
+
+  _el('active-toggle').addEventListener('change', handleToggle);
+  _el('voice-picker').addEventListener('change',  handleVoiceChange);
+  _el('volume-slider').addEventListener('input',  handleVolumeChange);
+  _el('test-btn').addEventListener('click',       onGestureDetected);
 });
 
 // ── Activate ─────────────────────────────────────────────────────────────────
-// Called when the user taps the Activate button on the landing screen.
-// This is the one user gesture that unlocks both audio and motion on iOS.
+// Called when the user taps the activate or "try in browser" button.
+// This is the one user gesture that unlocks audio and motion on iOS.
+// On Android, no permission dialog appears — motion access is granted automatically.
 
 async function handleActivate() {
-  const btn = _el('activate-btn');
-  btn.disabled    = true;
-  btn.textContent = 'Requesting access…';
+  // Give Android users feedback on their button, not the hidden iOS one
+  const isAndroid = document.documentElement.getAttribute('data-device') === 'android';
+  const feedbackBtn = isAndroid
+    ? document.getElementById('android-browser-btn')
+    : _el('activate-btn');
 
-  // Step 1: Unlock audio context — must happen synchronously in this tap handler
+  if (feedbackBtn) {
+    feedbackBtn.disabled    = true;
+    feedbackBtn.textContent = 'Loading…';
+  }
+
+  // Step 1: Unlock audio — must happen synchronously in this tap handler
   audio.unlock();
 
-  // Step 2: Request motion permission (iOS 13+ shows a native dialog here)
+  // Step 2: Check if motion is supported at all
+  if (!MotionEngine.isSupported()) {
+    _showNoMotionMessage();
+    // Still proceed — user can use the test button
+  }
+
+  // Step 3: Request motion permission (iOS 13+ shows native dialog; Android skips this)
   const granted = await motion.requestPermission();
-  if (!granted) {
-    btn.textContent = 'Motion access denied ✕';
-    btn.disabled    = false;
+  if (!granted && MotionEngine.isSupported()) {
+    if (feedbackBtn) {
+      feedbackBtn.textContent = 'Motion access denied ✕';
+      feedbackBtn.disabled    = false;
+    }
     return;
   }
 
-  // Step 3: Register all 40 audio elements (completes in ~80ms)
-  btn.textContent = 'Loading spells…';
+  // Step 4: Preload all audio elements (~80ms)
+  if (feedbackBtn) feedbackBtn.textContent = 'Loading spells…';
   await audio.preload(getAllAudioFilenames());
-
-  // Step 4: Apply saved volume
   audio.setVolume(state.volume);
 
-  // Step 5: Start motion detection if monitoring is on
-  if (state.isActive) {
-    motion.start();
-  }
+  // Step 5: Always start motion monitoring on activation.
+  // Force isActive true here — if a prior session had monitoring off,
+  // the user would get stuck with no spells and no obvious reason why.
+  state.isActive = true;
+  _el('active-toggle').checked = true;
+  _save();
+  motion.start();
 
-  // Step 6: Request screen wake lock so the phone doesn't sleep mid-session.
-  // Fails silently on browsers that don't support it (older iOS, some Android).
+  // Step 6: Wake lock
   try {
     wakeLock = await navigator.wakeLock.request('screen');
   } catch (_) {}
 
-  // Step 7: Briefly confirm readiness, then transition to casting UI
-  btn.textContent = 'Your phone is a wand now';
-  await new Promise(r => setTimeout(r, 1100));
+  // Step 7: Transition to casting UI
+  if (feedbackBtn) feedbackBtn.textContent = 'Your phone is a wand now ✦';
+  await new Promise(r => setTimeout(r, 900));
   _el('landing').hidden = true;
   _el('casting').hidden = false;
   _updateStatusUI();
 }
 
 // ── Gesture detected ─────────────────────────────────────────────────────────
-// Called by MotionEngine when a spell gesture is detected,
-// and also by the "Cast a test spell" button.
-// Mirrors AppModel.castSpell() in the iOS app.
+// Called by MotionEngine (motion gesture) and the test button.
 
 async function onGestureDetected() {
   const { spell, filename, nextVoiceWasFemale } = selectSpell(
@@ -128,6 +143,7 @@ async function onGestureDetected() {
   );
 
   await audio.play(filename);
+  _triggerFlash();
 
   state.lastSpellId        = spell.id;
   state.lastVoiceWasFemale = nextVoiceWasFemale;
@@ -136,6 +152,19 @@ async function onGestureDetected() {
 
   _showSpellName(spell.name);
   _updateSpellCounter();
+}
+
+// ── Raw motion callback ───────────────────────────────────────────────────────
+// Called on every devicemotion event. Used to pulse the sensor indicator
+// so users can confirm the accelerometer is working even before a spell fires.
+
+let _rawMotionTimer = null;
+function onRawMotion(magnitude) {
+  const dot = document.getElementById('sensor-dot');
+  if (!dot) return;
+  dot.classList.add('sensor-pulse');
+  clearTimeout(_rawMotionTimer);
+  _rawMotionTimer = setTimeout(() => dot.classList.remove('sensor-pulse'), 200);
 }
 
 // ── Settings handlers ─────────────────────────────────────────────────────────
@@ -163,8 +192,6 @@ function handleVolumeChange() {
 }
 
 // ── Wake lock: re-acquire when tab comes back into focus ──────────────────────
-// iOS releases the wake lock whenever the tab loses visibility.
-// This re-requests it so the screen stays on when the user returns.
 
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible' && audio.isReady) {
@@ -181,13 +208,16 @@ function _el(id) {
 }
 
 function _updateStatusUI() {
-  _el('status-emoji').textContent = state.isActive ? '🪄' : '💤';
-  _el('status-text').textContent  = state.isActive ? 'Listening for spells' : 'Monitoring off';
+  const emoji = _el('status-emoji');
+  const text  = _el('status-text');
+  if (emoji) emoji.textContent = state.isActive ? '🪄' : '💤';
+  if (text)  text.textContent  = state.isActive ? 'Listening for spells' : 'Monitoring off';
 }
 
 function _updateSpellCounter() {
-  const n = state.spellCount;
+  const n  = state.spellCount;
   const el = _el('spell-count');
+  if (!el) return;
   if (n > 0) {
     el.textContent = `#${n}`;
     el.classList.remove('spell-pop');
@@ -199,7 +229,23 @@ function _updateSpellCounter() {
 }
 
 function _showSpellName(name) {
-  // last-spell is hidden visually; keep the update for any future use
   const el = _el('last-spell');
-  if (el) el.textContent = name;
+  if (!el) return;
+  el.textContent = name;
+  el.classList.remove('spell-name-pop');
+  void el.offsetWidth;
+  el.classList.add('spell-name-pop');
+}
+
+function _triggerFlash() {
+  const flash = _el('spell-flash');
+  if (!flash) return;
+  flash.classList.remove('flash-active');
+  void flash.offsetWidth;
+  flash.classList.add('flash-active');
+}
+
+function _showNoMotionMessage() {
+  const msg = _el('no-motion-msg');
+  if (msg) msg.hidden = false;
 }
