@@ -3,10 +3,7 @@
 
 const SPELLS = [
   { id: 'abracadabra',  name: 'Abracadabra!',                          female: ['abracadabra-female.mp3'],                       male: ['abracadabra-male.mp3'],                                weight: 4 },
-  { id: 'alakazam',     name: 'Alakazam!',                             female: ['Alakazam-female.mp3'],                          male: ['Alakazam-male.mp3'],                                   weight: 4 },
   { id: 'hocus-pocus',  name: 'Hocus Pocus!',                          female: ['hocus-female.mp3'],                             male: ['Hocus-male.mp3'],                                      weight: 4 },
-  { id: 'presto',       name: 'Presto!',                               female: ['presto-female.mp3'],                            male: ['Presto-male.mp3'],                                     weight: 4 },
-  { id: 'sim-sala-bim', name: 'Sim Sala Bim!',                         female: ['sim-female.mp3'],                               male: ['sim-male.mp3'],                                        weight: 4 },
   { id: 'bibbidi',      name: 'Bibbidi-Bobbidi-Boo!',                  female: ['bibbidi-female.mp3'],                           male: ['bibbidi-male.mp3'],                                    weight: 4 },
   { id: 'supercali',    name: 'Supercalifragilisticexpialidocious!',    female: ['Supercalifragilisticexpialidocious-female.mp3'], male: ['Supercalifragilisticexpialidocious-male.mp3'],          weight: 4 },
   { id: 'expelliarmus', name: 'Expelliarmus!',                         female: ['expelliarmus-female.mp3'],                      male: ['expelliarmus-male.mp3', 'expelliarmus.mp3'],           weight: 4 },

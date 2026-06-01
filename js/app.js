@@ -7,7 +7,7 @@
 //   #landing          — the landing section, visible before activation
 //   #casting          — the casting section, hidden before activation
 //   #activate-btn     — the single button iOS users tap to start
-//   #android-browser-btn — "try in browser" button on Android view
+//   #android-browser-btn — browser activation button on Android view
 //   #status-emoji     — shows 🪄 (active) or 💤 (paused)
 //   #status-text      — shows "Listening for spells" or "Monitoring off"
 //   #last-spell       — displays the name of the last spell cast
@@ -57,7 +57,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // iOS activate button
   _el('activate-btn').addEventListener('click',   handleActivate);
 
-  // Android "try in browser" — wired here so the click is a real trusted user gesture.
+  // Android browser activation — wired here so the click is a real trusted user gesture.
   // dispatchEvent() creates isTrusted=false events which Android Chrome blocks for audio.play().
   const androidBtn = document.getElementById('android-browser-btn');
   if (androidBtn) {
@@ -71,7 +71,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Activate ─────────────────────────────────────────────────────────────────
-// Called when the user taps the activate or "try in browser" button.
+// Called when the user taps the activate/browser button.
 // This is the one user gesture that unlocks audio and motion on iOS.
 // On Android, no permission dialog appears — motion access is granted automatically.
 

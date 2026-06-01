@@ -829,7 +829,7 @@
       box-shadow: 0 4px 32px rgba(196, 151, 63, 0.32), 0 0 0 1px rgba(196, 151, 63, 0.18);
     }
 
-    /* ── Plain text link button (Android "try in browser") ─────────────── */
+    /* ── Plain text links and subtle download fallbacks ────────────────── */
     .btn-text-link {
       margin-top: 18px;
       background: none;
@@ -854,6 +854,28 @@
       color: var(--gold-dim);
     }
 
+    .subtle-download {
+      margin-top: 18px;
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.58rem;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-decoration: none;
+      opacity: 0.78;
+      transition: color 0.2s ease, opacity 0.2s ease;
+      animation: fadeIn 0.9s ease both;
+      animation-delay: 1.08s;
+    }
+
+    .subtle-download:hover,
+    .subtle-download:active {
+      color: var(--gold-dim);
+      opacity: 1;
+    }
+
     /* ── Platform note ──────────────────────────────────────────────────── */
     .platform-note {
       margin-top: 22px;
@@ -873,23 +895,31 @@
 
     /* ── Mac install note (Gatekeeper workaround) ───────────────────────── */
     .install-note {
-      margin-top: 20px;
-      background: rgba(196, 151, 63, 0.07);
-      border: 1px solid rgba(196, 151, 63, 0.18);
-      border-radius: 14px;
-      padding: 16px 18px;
-      max-width: 310px;
-      text-align: left;
+      margin-top: 12px;
+      max-width: 290px;
+      text-align: center;
+      opacity: 0.62;
+    }
+    .install-note[open] {
+      opacity: 0.82;
     }
     .install-note-title {
-      font-size: 0.7rem;
+      list-style: none;
+      cursor: pointer;
+      font-size: 0.56rem;
       font-weight: 500;
-      color: var(--gold-dim);
-      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      margin-bottom: 6px;
+      text-decoration: underline;
+      text-decoration-color: rgba(196, 151, 63, 0.22);
+      text-underline-offset: 4px;
+    }
+    .install-note-title::-webkit-details-marker {
+      display: none;
     }
     .install-note-body {
+      margin-top: 12px;
       font-size: 0.65rem;
       color: var(--text-muted);
       line-height: 1.6;
@@ -1182,11 +1212,11 @@
 
       <div class="gold-rule"></div>
 
-      <p class="landing-tagline">Flick your wrist.<br>Cast a spell.</p>
+      <p class="landing-tagline">Open the link.<br>Cast a spell.</p>
 
-      <button id="activate-btn" class="btn-activate">Cast a Spell</button>
+      <button id="activate-btn" class="btn-activate">Enable Browser Magic</button>
 
-      <p class="landing-sub">Turn up your volume &nbsp;·&nbsp; Allow motion access when prompted</p>
+      <p class="landing-sub">No install &nbsp;·&nbsp; Sound on &nbsp;·&nbsp; Allow motion access</p>
 
     </div>
 
@@ -1199,13 +1229,11 @@
 
       <div class="gold-rule"></div>
 
-      <p class="landing-tagline">Flick your wrist.<br>Cast a spell.</p>
+      <p class="landing-tagline">Open the link.<br>Cast a spell.</p>
 
-      <a class="btn-download" href="downloads/device-magic.apk" download="device-magic.apk">
-        Download for Android
-      </a>
+      <button class="btn-activate" id="android-browser-btn">Enable Browser Magic</button>
 
-      <button class="btn-text-link" id="android-browser-btn">try in browser</button>
+      <a class="subtle-download" href="downloads/device-magic.apk" download="device-magic.apk">Android APK</a>
 
     </div>
 
@@ -1218,21 +1246,21 @@
 
       <div class="gold-rule"></div>
 
-      <p class="landing-tagline">Flick your wrist.<br>Cast a spell.</p>
-
-      <a class="btn-download" href="downloads/device-magic-mac.zip" download="device-magic-mac.zip">
-        Download for Mac
-      </a>
+      <p class="landing-tagline">Open this on a phone.<br>Cast a spell.</p>
 
       <p class="platform-note">
-        Runs silently in your menu bar &nbsp;·&nbsp; macOS 14+
+        Browser magic works best on iPhone or Android.
       </p>
 
       <p class="platform-also">
-        Also on
-        <a href="https://janardot.github.io/DeviceMagic/" class="platform-also-link">iPhone &amp; Android</a>
-        — no download needed, open in browser
+        Send yourself
+        <a href="https://janardot.github.io/DeviceMagic/" class="platform-also-link">this link</a>
+        — no app needed
       </p>
+
+      <a class="subtle-download" href="downloads/device-magic-mac.zip" download="device-magic-mac.zip">
+        tiny Mac menu bar download
+      </a>
 
     </div>
 
@@ -1245,7 +1273,7 @@
 
       <div class="gold-rule"></div>
 
-      <p class="desktop-message">This one works best on a phone.<br>Scan to open it there.</p>
+      <p class="desktop-message">This is a phone-browser spell link.<br>Scan it, send it, cast it.</p>
 
       <div class="qr-wrap">
         <span class="qr-corner-bl"></span>
@@ -1300,8 +1328,8 @@
       </details>
 
       <!-- ── macOS install help — only shown on Mac ──────────────────────── -->
-      <div class="install-note mac-only">
-        <p class="install-note-title">Blocked by macOS?</p>
+      <details class="install-note mac-only">
+        <summary class="install-note-title">Mac install help</summary>
         <p class="install-note-body">
           Apple blocks unverified apps by default. Paste this in Terminal to install without the warning:
         </p>
@@ -1313,7 +1341,7 @@
           Or: open the downloaded app, click Done, then go to<br>
           <strong>System Settings → Privacy &amp; Security → Open Anyway</strong>
         </p>
-      </div>
+      </details>
 
       <!-- ── Credits — © left, love text right ────────────────────────── -->
       <div class="footer-credits">
@@ -1436,7 +1464,7 @@
       window.removeEventListener('scroll', hideHint);
     }, { passive: true });
 
-    // Android "try in browser" is now wired directly in app.js so the click
+    // Android browser activation is wired directly in app.js so the click
     // event is trusted (isTrusted=true) — required for audio.play() on Android Chrome.
   </script>
   <script src="js/spells.js"></script>
