@@ -21,11 +21,14 @@
 
 // ── State ────────────────────────────────────────────────────────────────────
 
+const MUGGLE_FLICK_INTERVAL = 25;
+
 const state = {
   isActive:           _load('isActive',           true),
   voiceStyle:         _load('voiceStyle',          'mixed'),
   volume:             _load('volume',              1.0),
   spellCount:         _load('spellCount',          0),
+  flickCount:         _load('flickCount',          0),
   lastSpellId:        _load('lastSpellId',         null),
   lastVoiceWasFemale: _load('lastVoiceWasFemale',  false),
 };
@@ -41,7 +44,7 @@ function _save() {
 
 // ── Engine instances ─────────────────────────────────────────────────────────
 
-const motion = new MotionEngine(onGestureDetected, onRawMotion);
+const motion = new MotionEngine(onFlickDetected, onRawMotion);
 const audio  = new AudioEngine();
 let wakeLock  = null;
 
@@ -67,7 +70,7 @@ window.addEventListener('DOMContentLoaded', () => {
   _el('active-toggle').addEventListener('change', handleToggle);
   _el('voice-picker').addEventListener('change',  handleVoiceChange);
   _el('volume-slider').addEventListener('input',  handleVolumeChange);
-  _el('test-btn').addEventListener('click',       onGestureDetected);
+  _el('test-btn').addEventListener('click',       onTestSpell);
 });
 
 // ── Activate ─────────────────────────────────────────────────────────────────
@@ -142,13 +145,26 @@ async function handleActivate() {
 }
 
 // ── Gesture detected ─────────────────────────────────────────────────────────
-// Called by MotionEngine (motion gesture) and the test button.
+// Called by MotionEngine for real flicks. The Muggle spell is reserved for
+// every 25th flick and does not participate in the normal random rotation.
 
-async function onGestureDetected() {
+async function onFlickDetected() {
+  state.flickCount++;
+  const forcedId = state.flickCount % MUGGLE_FLICK_INTERVAL === 0 ? 'muggle' : null;
+  await castSpell(forcedId);
+}
+
+// Test casts do not advance the real-flick schedule.
+async function onTestSpell() {
+  await castSpell();
+}
+
+async function castSpell(forcedId = null) {
   const { spell, filename, nextVoiceWasFemale } = selectSpell(
     state.lastSpellId,
     state.lastVoiceWasFemale,
-    state.voiceStyle
+    state.voiceStyle,
+    forcedId
   );
 
   await audio.play(filename);
