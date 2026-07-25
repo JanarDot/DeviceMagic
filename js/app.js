@@ -51,6 +51,10 @@ let wakeLock  = null;
 // ── Boot ─────────────────────────────────────────────────────────────────────
 
 window.addEventListener('DOMContentLoaded', () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
   // Restore UI controls to saved state
   _el('voice-picker').value    = state.voiceStyle;
   _el('volume-slider').value   = state.volume;
