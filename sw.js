@@ -1,4 +1,4 @@
-const CACHE_NAME = 'device-magic-v6';
+const CACHE_NAME = 'device-magic-v7';
 const APP_SHELL = [
   './',
   './index.html',
