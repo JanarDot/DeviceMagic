@@ -9,6 +9,8 @@
 // and once unlocked by a single tap it can be called programmatically forever —
 // including from accelerometer events and the test button.
 
+const SAFE_OUTPUT_GAIN = 0.70;
+
 class AudioEngine {
   constructor() {
     this.elements = new Map();   // filename → HTMLAudioElement
@@ -41,7 +43,7 @@ class AudioEngine {
       const el = document.createElement('audio');
       el.src      = `audio/${filename}`;
       el.preload  = 'auto';
-      el.volume   = this.volume;
+      el.volume   = this.volume * SAFE_OUTPUT_GAIN;
       this.elements.set(filename, el);
     });
     // Brief yield so the caller can update UI before returning
@@ -61,7 +63,7 @@ class AudioEngine {
       } catch (_) {}
     }
 
-    el.volume      = this.volume;
+    el.volume      = this.volume * SAFE_OUTPUT_GAIN;
     el.currentTime = 0;
     try {
       await el.play();
@@ -74,7 +76,7 @@ class AudioEngine {
   // Sets master volume (0.0 – 1.0). Applied to all elements immediately.
   setVolume(v) {
     this.volume = Math.max(0, Math.min(1, v));
-    this.elements.forEach(el => { el.volume = this.volume; });
+    this.elements.forEach(el => { el.volume = this.volume * SAFE_OUTPUT_GAIN; });
   }
 
   // True once unlock() has been called and elements are registered.
